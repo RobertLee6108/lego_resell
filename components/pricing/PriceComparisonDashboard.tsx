@@ -4,7 +4,11 @@ import { useMemo, useState } from "react";
 import { calculateEffectivePrice } from "@/lib/pricing/calculateEffectivePrice";
 import { formatDate, formatKrw } from "@/lib/format";
 import type { DiscountRuleInput, ProductStatus } from "@/lib/pricing/types";
+import type { RetailerOption } from "@/lib/retailers/types";
+import { ProductEditForm } from "@/components/products/ProductEditForm";
+import type { ThemeOption } from "@/components/products/ThemeManager";
 import { ProductStatusBadge } from "@/components/products/ProductStatusBadge";
+import { ListingAddForm } from "./ListingAddForm";
 import { SortControls, type SortKey } from "./SortControls";
 import { RetailerPriceRow, type RetailerRowData } from "./RetailerPriceRow";
 
@@ -14,7 +18,10 @@ export interface PriceComparisonDashboardProps {
   msrp: number;
   status: ProductStatus;
   releaseDate: string | null;
+  themeId: string | null;
   themeName: string | null;
+  themes: ThemeOption[];
+  retailers: RetailerOption[];
   listings: RetailerRowData[];
 }
 
@@ -24,7 +31,10 @@ export function PriceComparisonDashboard({
   msrp,
   status,
   releaseDate,
+  themeId,
   themeName,
+  themes,
+  retailers,
   listings,
 }: PriceComparisonDashboardProps) {
   const [sortKey, setSortKey] = useState<SortKey>("effective");
@@ -52,9 +62,20 @@ export function PriceComparisonDashboard({
   }, [listings, sortKey, msrp]);
 
   const lowestId = sorted[0]?.row.listing_id ?? null;
+  const existingRetailerIds = listings.map((l) => l.retailer_id);
 
   return (
     <div className="space-y-6">
+      <ProductEditForm
+        productNumber={productNumber}
+        name={name}
+        msrp={msrp}
+        status={status}
+        themeId={themeId}
+        releaseDate={releaseDate}
+        themes={themes}
+      />
+
       <header className="space-y-2 border-b border-zinc-200 pb-6">
         <div className="flex flex-wrap items-center gap-2">
           <span className="font-mono text-sm text-zinc-500">{productNumber}</span>
@@ -88,6 +109,7 @@ export function PriceComparisonDashboard({
         {sorted.map(({ row }) => (
           <RetailerPriceRow
             key={row.listing_id}
+            productNumber={productNumber}
             row={row}
             msrp={msrp}
             isLowest={row.listing_id === lowestId}
@@ -99,6 +121,12 @@ export function PriceComparisonDashboard({
           <p className="text-sm text-zinc-500">등록된 리스팅이 없습니다.</p>
         )}
       </div>
+
+      <ListingAddForm
+        productNumber={productNumber}
+        retailers={retailers}
+        existingRetailerIds={existingRetailerIds}
+      />
     </div>
   );
 }

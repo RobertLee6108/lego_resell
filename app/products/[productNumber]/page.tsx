@@ -1,7 +1,10 @@
 import Link from "next/link";
 import { notFound } from "next/navigation";
 import { PriceComparisonDashboard } from "@/components/pricing/PriceComparisonDashboard";
+import { PageShell } from "@/components/layout/PageShell";
+import { getThemes } from "@/lib/data/catalog";
 import { getProductDetail } from "@/lib/data/product-detail";
+import { getRetailers } from "@/lib/data/retailers";
 
 export const dynamic = "force-dynamic";
 
@@ -27,16 +30,27 @@ export default async function ProductDetailPage({ params }: PageProps) {
   }
 
   let product;
+  let themes;
+  let retailers;
   try {
-    product = await getProductDetail(productNumber);
+    [product, themes, retailers] = await Promise.all([
+      getProductDetail(productNumber),
+      getThemes(),
+      getRetailers(),
+    ]);
   } catch {
     notFound();
   }
 
   if (!product) notFound();
 
+  const themeOptions = themes.map((t) => ({
+    value: t.id,
+    label: t.name,
+  }));
+
   return (
-    <div className="space-y-4">
+    <PageShell>
       <Link
         href="/"
         className="inline-block text-sm text-emerald-700 hover:underline"
@@ -49,9 +63,12 @@ export default async function ProductDetailPage({ params }: PageProps) {
         msrp={product.msrp}
         status={product.status}
         releaseDate={product.releaseDate}
+        themeId={product.themeId}
         themeName={product.themeName}
+        themes={themeOptions}
+        retailers={retailers}
         listings={product.listings}
       />
-    </div>
+    </PageShell>
   );
 }

@@ -1,6 +1,6 @@
 import { createClient } from "@/lib/supabase/server";
 import { slugifyTheme } from "@/lib/catalog/slug";
-import type { ProductFormInput, ThemeFormInput } from "@/lib/catalog/types";
+import type { ProductFormInput, ProductUpdateInput, ThemeFormInput } from "@/lib/catalog/types";
 import type { ProductStatus } from "@/lib/pricing/types";
 import type { ProductCardProps } from "@/components/products/ProductCard";
 
@@ -135,6 +135,21 @@ export async function addProduct(input: ProductFormInput): Promise<void> {
     theme_id: input.theme_id || null,
     release_date: input.release_date || null,
   });
+  if (error) throw error;
+}
+
+export async function updateProduct(input: ProductUpdateInput): Promise<void> {
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("products")
+    .update({
+      name: input.name.trim(),
+      msrp: input.msrp,
+      status: input.status,
+      theme_id: input.theme_id || null,
+      release_date: input.release_date || null,
+    })
+    .eq("product_number", input.product_number.trim());
   if (error) throw error;
 }
 

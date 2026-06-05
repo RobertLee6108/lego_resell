@@ -12,6 +12,7 @@ export interface ProductDetail {
   msrp: number;
   status: ProductStatus;
   releaseDate: string | null;
+  themeId: string | null;
   themeName: string | null;
   notes: string | null;
   listings: RetailerRowData[];
@@ -32,6 +33,7 @@ export async function getProductDetail(
       status,
       release_date,
       notes,
+      theme_id,
       themes ( name )
     `,
     )
@@ -78,6 +80,7 @@ export async function getProductDetail(
 
     return {
       listing_id: pl.id,
+      retailer_id: retailer.id,
       retailer_name: retailer.name,
       retailer_slug: retailer.slug,
       sale_price: pl.sale_price,
@@ -97,6 +100,7 @@ export async function getProductDetail(
     msrp: product.msrp,
     status: product.status as ProductStatus,
     releaseDate: product.release_date,
+    themeId: product.theme_id,
     themeName: theme?.name ?? null,
     notes: product.notes,
     listings: rows,
