@@ -52,7 +52,7 @@ export default async function HomePage({
       <PageShell>
         <PageHeader
           title="제품 카탈로그"
-          description="정가 대비 몰별 체감 실구매가를 비교합니다."
+          description="레고 세트를 테마별로 관리합니다. 몰별 가격은 제품 상세에서 확인합니다."
         />
         <ProductForm themes={themeOptions} />
         <CatalogGrid

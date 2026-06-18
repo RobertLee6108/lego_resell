@@ -48,36 +48,9 @@ export async function getCatalogProducts(
   const { data: products, error: productsError } = await query;
   if (productsError) throw productsError;
 
-  const { data: comparisons, error: compError } = await supabase
-    .from("v_product_price_comparison")
-    .select("product_number, effective_price, listing_id");
-
-  if (compError) throw compError;
-
-  const byProduct = new Map<
-    string,
-    { minEffective: number | null; count: number }
-  >();
-
-  for (const row of comparisons ?? []) {
-    const cur = byProduct.get(row.product_number) ?? {
-      minEffective: null,
-      count: 0,
-    };
-    cur.count += 1;
-    if (
-      cur.minEffective == null ||
-      row.effective_price < cur.minEffective
-    ) {
-      cur.minEffective = row.effective_price;
-    }
-    byProduct.set(row.product_number, cur);
-  }
-
   return (products ?? []).map((p) => {
     const rawTheme = p.themes as { name: string } | { name: string }[] | null;
     const theme = Array.isArray(rawTheme) ? rawTheme[0] : rawTheme;
-    const stats = byProduct.get(p.product_number);
     return {
       productNumber: p.product_number,
       name: p.name,
@@ -85,8 +58,6 @@ export async function getCatalogProducts(
       status: p.status as ProductStatus,
       themeId: p.theme_id,
       themeName: theme?.name ?? null,
-      lowestEffectivePrice: stats?.minEffective ?? null,
-      listingCount: stats?.count ?? 0,
     };
   });
 }

@@ -6,8 +6,6 @@ import type { ProductCardProps } from "@/components/products/ProductCard";
 const base: Omit<ProductCardProps, "productNumber" | "name" | "themeId" | "themeName"> = {
   msrp: 100_000,
   status: "on_sale",
-  lowestEffectivePrice: null,
-  listingCount: 0,
 };
 
 const themes = [

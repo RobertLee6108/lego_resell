@@ -13,8 +13,6 @@ export interface ProductCardProps {
   status: ProductStatus;
   themeId: string | null;
   themeName: string | null;
-  lowestEffectivePrice: number | null;
-  listingCount: number;
   hideThemeName?: boolean;
 }
 
@@ -24,8 +22,6 @@ export function ProductCard({
   msrp,
   status,
   themeName,
-  lowestEffectivePrice,
-  listingCount,
   hideThemeName = false,
 }: ProductCardProps) {
   return (
@@ -58,21 +54,12 @@ export function ProductCard({
       {themeName && !hideThemeName && (
         <p className="mb-3 text-xs text-zinc-500">{themeName}</p>
       )}
-      <dl className="mt-auto grid grid-cols-2 gap-2 text-sm">
+      <dl className="mt-auto text-sm">
         <div>
           <dt className="text-zinc-500">정가</dt>
           <dd className="font-medium">{formatKrw(msrp)}</dd>
         </div>
-        <div>
-          <dt className="text-zinc-500">최저 체감가</dt>
-          <dd className="font-semibold text-emerald-700">
-            {lowestEffectivePrice != null
-              ? formatKrw(lowestEffectivePrice)
-              : "—"}
-          </dd>
-        </div>
       </dl>
-      <p className="mt-2 text-xs text-zinc-400">{listingCount}개 몰 비교</p>
       </Link>
     </div>
   );
