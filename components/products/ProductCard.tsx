@@ -15,6 +15,7 @@ export interface ProductCardProps {
   themeName: string | null;
   lowestEffectivePrice: number | null;
   listingCount: number;
+  hideThemeName?: boolean;
 }
 
 export function ProductCard({
@@ -25,6 +26,7 @@ export function ProductCard({
   themeName,
   lowestEffectivePrice,
   listingCount,
+  hideThemeName = false,
 }: ProductCardProps) {
   return (
     <div className="group relative flex flex-col rounded-xl border border-zinc-200 bg-white p-4 shadow-sm transition hover:border-emerald-300 hover:shadow-md">
@@ -53,7 +55,7 @@ export function ProductCard({
       <h2 className="mb-1 text-base font-semibold text-zinc-900 group-hover:text-emerald-800">
         {name}
       </h2>
-      {themeName && (
+      {themeName && !hideThemeName && (
         <p className="mb-3 text-xs text-zinc-500">{themeName}</p>
       )}
       <dl className="mt-auto grid grid-cols-2 gap-2 text-sm">

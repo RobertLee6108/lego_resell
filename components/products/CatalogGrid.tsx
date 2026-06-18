@@ -1,6 +1,8 @@
 "use client";
 
 import { useMemo, useState } from "react";
+import { PageSection } from "@/components/layout/PageSection";
+import { groupProductsByTheme } from "@/lib/catalog/groupProductsByTheme";
 import { ProductCard, type ProductCardProps } from "./ProductCard";
 import { ProductFilters } from "./ProductFilters";
 import { ThemeManager } from "./ThemeManager";
@@ -30,6 +32,11 @@ export function CatalogGrid({
     });
   }, [products, themeId, status]);
 
+  const grouped = useMemo(
+    () => groupProductsByTheme(filtered, themes),
+    [filtered, themes],
+  );
+
   return (
     <div className="space-y-6">
       <div className="space-y-3">
@@ -42,13 +49,29 @@ export function CatalogGrid({
         />
         <ThemeManager themes={themes} />
       </div>
-      <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        {filtered.map((p) => (
-          <ProductCard key={p.productNumber} {...p} />
-        ))}
-      </div>
-      {filtered.length === 0 && (
-        <p className="text-center text-sm text-zinc-500">조건에 맞는 제품이 없습니다.</p>
+      {grouped.length === 0 ? (
+        <p className="text-center text-sm text-zinc-500">
+          조건에 맞는 제품이 없습니다.
+        </p>
+      ) : (
+        <div className="space-y-8">
+          {grouped.map((group) => (
+            <PageSection
+              key={group.themeId ?? "uncategorized"}
+              title={`${group.themeName} (${group.products.length})`}
+            >
+              <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                {group.products.map((p) => (
+                  <ProductCard
+                    key={p.productNumber}
+                    {...p}
+                    hideThemeName
+                  />
+                ))}
+              </div>
+            </PageSection>
+          ))}
+        </div>
       )}
     </div>
   );
