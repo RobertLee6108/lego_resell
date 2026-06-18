@@ -1,7 +1,13 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { addSalesRecord, deleteSalesRecord } from "@/lib/data/sales";
+import {
+  addSalesRecord,
+  deleteSalesRecord,
+  getExistingNaverExternalOrderIds,
+  importNaverSettlementRows,
+} from "@/lib/data/sales";
+import type { NaverImportResult, NaverImportRow } from "@/lib/sales/naverSettlementTypes";
 import type { SalesFormInput } from "@/lib/sales/types";
 
 export async function actionAddSalesRecord(formData: FormData) {
@@ -25,4 +31,20 @@ export async function actionDeleteSalesRecord(formData: FormData) {
   await deleteSalesRecord(id);
   revalidatePath("/sales");
   revalidatePath("/margin");
+}
+
+export async function actionGetNaverExistingOrderIds(
+  externalOrderIds: string[],
+): Promise<string[]> {
+  const existing = await getExistingNaverExternalOrderIds(externalOrderIds);
+  return [...existing];
+}
+
+export async function actionImportNaverSettlement(
+  rows: NaverImportRow[],
+): Promise<NaverImportResult> {
+  const result = await importNaverSettlementRows(rows);
+  revalidatePath("/sales");
+  revalidatePath("/margin");
+  return result;
 }

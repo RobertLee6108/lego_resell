@@ -1,0 +1,6 @@
+# 로컬 preview / deploy 시 Wrangler가 읽는 변수 (복사: cp .dev.vars.example .dev.vars)
+# 프로덕션 Supabase 값으로 채우세요. 로컬 127.0.0.1 URL은 배포 후 동작하지 않습니다.
+
+NEXTJS_ENV=production
+NEXT_PUBLIC_SUPABASE_URL=https://your-project-ref.supabase.co
+NEXT_PUBLIC_SUPABASE_ANON_KEY=your-anon-key

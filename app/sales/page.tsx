@@ -5,6 +5,7 @@ import { StatCard, StatGrid } from "@/components/layout/StatCard";
 import { getSalesRecords } from "@/lib/data/sales";
 import { createClient } from "@/lib/supabase/server";
 import { SalesForm } from "@/components/sales/SalesForm";
+import { NaverSettlementImport } from "@/components/sales/NaverSettlementImport";
 import { SalesTable } from "@/components/sales/SalesTable";
 import { formatKrw } from "@/lib/format";
 import { calcSaleNetRevenue } from "@/lib/sales/types";
@@ -52,6 +53,10 @@ export default async function SalesPage() {
       </StatGrid>
 
       <SalesForm products={products} retailers={retailers} />
+
+      <PageSection title="네이버 정산 가져오기">
+        <NaverSettlementImport products={products} />
+      </PageSection>
 
       <PageSection title="판매 이력">
         <SalesTable records={records} />

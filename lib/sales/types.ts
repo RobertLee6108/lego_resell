@@ -10,6 +10,7 @@ export interface SalesRecord {
   platform_fee_rate: number;
   shipping_out_cost: number;
   import_source: string | null;
+  external_order_id: string | null;
   memo: string | null;
   created_at: string;
 }

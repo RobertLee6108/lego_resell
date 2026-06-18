@@ -8,6 +8,7 @@ import { getInventorySummary } from "@/lib/data/inventory";
 import { calcTotals } from "@/lib/margin/types";
 import { MarginSummaryCards } from "@/components/margin/MarginSummaryCards";
 import { MarginTable } from "@/components/margin/MarginTable";
+import { RecommendedPriceCalculator } from "@/components/margin/RecommendedPriceCalculator";
 import { formatKrw } from "@/lib/format";
 
 export const dynamic = "force-dynamic";
@@ -28,6 +29,10 @@ export default async function MarginPage() {
         title="마진 관리"
         description="소싱 원가 대비 실 수익과 ROI를 제품별로 확인합니다."
       />
+
+      <PageSection title="권장 판매가">
+        <RecommendedPriceCalculator inventoryRows={inventoryRows} />
+      </PageSection>
 
       {marginRows.length === 0 ? (
         <div className="rounded-xl border border-dashed border-zinc-300 bg-white p-8 text-center text-sm text-zinc-500">

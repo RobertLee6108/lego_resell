@@ -258,6 +258,7 @@ export type Database = {
       sales_records: {
         Row: {
           created_at: string
+          external_order_id: string | null
           id: string
           import_source: string | null
           memo: string | null
@@ -268,9 +269,11 @@ export type Database = {
           shipping_out_cost: number
           sold_at: string
           unit_sale_price: number
+          user_id: string | null
         }
         Insert: {
           created_at?: string
+          external_order_id?: string | null
           id?: string
           import_source?: string | null
           memo?: string | null
@@ -281,9 +284,11 @@ export type Database = {
           shipping_out_cost?: number
           sold_at?: string
           unit_sale_price: number
+          user_id?: string | null
         }
         Update: {
           created_at?: string
+          external_order_id?: string | null
           id?: string
           import_source?: string | null
           memo?: string | null
@@ -294,6 +299,7 @@ export type Database = {
           shipping_out_cost?: number
           sold_at?: string
           unit_sale_price?: number
+          user_id?: string | null
         }
         Relationships: [
           {

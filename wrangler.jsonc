@@ -1,0 +1,39 @@
+{
+	"$schema": "node_modules/wrangler/config-schema.json",
+	"main": ".open-next/worker.js",
+	"name": "legoresell",
+	"keep_vars": true,
+	"workers_dev": true,
+	"vars": {
+		"NEXT_PUBLIC_SUPABASE_URL": "https://wfrusrhqxcwenzjqmulc.supabase.co",
+		"NEXT_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_sOpI0JrW_fbzeCpVNecqRg_9YBp_u05"
+	},
+	"routes": [
+		{
+			"pattern": "happytomato.net",
+			"custom_domain": true
+		}
+	],
+	"compatibility_date": "2026-06-12",
+	"compatibility_flags": [
+		"nodejs_compat",
+		"global_fetch_strictly_public"
+	],
+	"assets": {
+		"directory": ".open-next/assets",
+		"binding": "ASSETS"
+	},
+	"services": [
+		{
+			// Self-reference service binding, the service name must match the worker name
+			// see https://opennext.js.org/cloudflare/caching
+			"binding": "WORKER_SELF_REFERENCE",
+			"service": "legoresell"
+		}
+	],
+	"images": {
+		// Enable image optimization
+		// see https://opennext.js.org/cloudflare/howtos/image
+		"binding": "IMAGES"
+	}
+}
