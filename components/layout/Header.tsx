@@ -10,6 +10,7 @@ const NAV = [
   { href: "/inventory", label: "재고" },
   { href: "/sales", label: "판매" },
   { href: "/margin", label: "마진" },
+  { href: "/naver-shopping", label: "네이버 검색" },
 ];
 
 interface HeaderProps {
@@ -26,27 +27,28 @@ export function Header({ userEmail }: HeaderProps) {
         <Link href="/" className="shrink-0 text-base font-bold tracking-tight text-zinc-900">
           레고 리셀
         </Link>
-        {isLoggedIn ? (
-          <nav className="flex gap-1">
-            {NAV.map(({ href, label }) => {
-              const active =
-                href === "/" ? pathname === "/" : pathname.startsWith(href);
-              return (
-                <Link
-                  key={href}
-                  href={href}
-                  className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
-                    active
-                      ? "bg-zinc-100 text-zinc-900"
-                      : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800"
-                  }`}
-                >
-                  {label}
-                </Link>
-              );
-            })}
-          </nav>
-        ) : null}
+        <nav className="flex gap-1">
+          {(isLoggedIn
+            ? NAV
+            : NAV.filter(({ href }) => href === "/naver-shopping")
+          ).map(({ href, label }) => {
+            const active =
+              href === "/" ? pathname === "/" : pathname.startsWith(href);
+            return (
+              <Link
+                key={href}
+                href={href}
+                className={`rounded-lg px-3 py-1.5 text-sm font-medium transition ${
+                  active
+                    ? "bg-zinc-100 text-zinc-900"
+                    : "text-zinc-500 hover:bg-zinc-50 hover:text-zinc-800"
+                }`}
+              >
+                {label}
+              </Link>
+            );
+          })}
+        </nav>
         <div className="ml-auto flex items-center gap-3">
           {isLoggedIn ? (
             <>

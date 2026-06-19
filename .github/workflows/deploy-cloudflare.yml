@@ -27,3 +27,7 @@ jobs:
           CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           NEXT_PUBLIC_SUPABASE_URL: https://wfrusrhqxcwenzjqmulc.supabase.co
           NEXT_PUBLIC_SUPABASE_ANON_KEY: ${{ secrets.NEXT_PUBLIC_SUPABASE_ANON_KEY }}
+          NAVER_SEARCH_CLIENT_ID: ${{ secrets.NAVER_SEARCH_CLIENT_ID }}
+          NAVER_SEARCH_CLIENT_SECRET: ${{ secrets.NAVER_SEARCH_CLIENT_SECRET }}
+          BATCH_API_TOKEN: ${{ secrets.BATCH_API_TOKEN }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}

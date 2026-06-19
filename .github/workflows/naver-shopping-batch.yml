@@ -1,0 +1,17 @@
+name: Naver Shopping Batch
+
+on:
+  schedule:
+    - cron: "7 * * * *"
+  workflow_dispatch:
+
+jobs:
+  run:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Trigger batch search
+        run: |
+          curl --fail --request POST "https://happytomato.net/api/naver-shopping/batch" \
+            --header "Authorization: Bearer ${BATCH_API_TOKEN}"
+        env:
+          BATCH_API_TOKEN: ${{ secrets.BATCH_API_TOKEN }}

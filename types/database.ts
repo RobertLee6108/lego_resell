@@ -85,6 +85,200 @@ export type Database = {
           },
         ]
       }
+      naver_shopping_search_results: {
+        Row: {
+          brand: string | null
+          category1: string | null
+          category2: string | null
+          category3: string | null
+          category4: string | null
+          created_at: string
+          effective_price: number | null
+          hprice: number
+          id: string
+          image: string | null
+          link: string
+          lprice: number
+          maker: string | null
+          mall_name: string
+          naver_product_id: string
+          product_number: string | null
+          product_type: number
+          query: string
+          raw: Json
+          run_id: string
+          shipping_fee_override: number | null
+          title: string
+          user_id: string | null
+        }
+        Insert: {
+          brand?: string | null
+          category1?: string | null
+          category2?: string | null
+          category3?: string | null
+          category4?: string | null
+          created_at?: string
+          effective_price?: never
+          hprice?: number
+          id?: string
+          image?: string | null
+          link: string
+          lprice?: number
+          maker?: string | null
+          mall_name: string
+          naver_product_id: string
+          product_number?: string | null
+          product_type?: number
+          query: string
+          raw?: Json
+          run_id: string
+          shipping_fee_override?: number | null
+          title: string
+          user_id?: string | null
+        }
+        Update: {
+          brand?: string | null
+          category1?: string | null
+          category2?: string | null
+          category3?: string | null
+          category4?: string | null
+          created_at?: string
+          effective_price?: never
+          hprice?: number
+          id?: string
+          image?: string | null
+          link?: string
+          lprice?: number
+          maker?: string | null
+          mall_name?: string
+          naver_product_id?: string
+          product_number?: string | null
+          product_type?: number
+          query?: string
+          raw?: Json
+          run_id?: string
+          shipping_fee_override?: number | null
+          title?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "naver_shopping_search_results_product_number_fkey"
+            columns: ["product_number"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["product_number"]
+          },
+          {
+            foreignKeyName: "naver_shopping_search_results_run_id_fkey"
+            columns: ["run_id"]
+            isOneToOne: false
+            referencedRelation: "naver_shopping_search_runs"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      naver_shopping_search_runs: {
+        Row: {
+          created_at: string
+          display: number
+          exclude: string | null
+          filter: string | null
+          id: string
+          include_shipping: boolean
+          queries: string[]
+          sort: string
+          total: number
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          display?: number
+          exclude?: string | null
+          filter?: string | null
+          id?: string
+          include_shipping?: boolean
+          queries: string[]
+          sort?: string
+          total?: number
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          display?: number
+          exclude?: string | null
+          filter?: string | null
+          id?: string
+          include_shipping?: boolean
+          queries?: string[]
+          sort?: string
+          total?: number
+          user_id?: string | null
+        }
+        Relationships: []
+      }
+      naver_shopping_watch_targets: {
+        Row: {
+          created_at: string
+          display: number
+          enabled: boolean
+          id: string
+          include_overseas: boolean
+          include_shipping: boolean
+          include_used: boolean
+          interval_minutes: number
+          keyword: string
+          last_run_at: string | null
+          next_run_at: string
+          product_number: string | null
+          sort: string
+          updated_at: string
+          user_id: string | null
+        }
+        Insert: {
+          created_at?: string
+          display?: number
+          enabled?: boolean
+          id?: string
+          include_overseas?: boolean
+          include_shipping?: boolean
+          include_used?: boolean
+          interval_minutes?: number
+          keyword: string
+          last_run_at?: string | null
+          next_run_at?: string
+          product_number?: string | null
+          sort?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Update: {
+          created_at?: string
+          display?: number
+          enabled?: boolean
+          id?: string
+          include_overseas?: boolean
+          include_shipping?: boolean
+          include_used?: boolean
+          interval_minutes?: number
+          keyword?: string
+          last_run_at?: string | null
+          next_run_at?: string
+          product_number?: string | null
+          sort?: string
+          updated_at?: string
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "naver_shopping_watch_targets_product_number_fkey"
+            columns: ["product_number"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["product_number"]
+          },
+        ]
+      }
       product_listings: {
         Row: {
           created_at: string
