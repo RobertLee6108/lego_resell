@@ -27,6 +27,20 @@ function emptyToNull(value: string): string | null {
   return cleaned ? cleaned : null;
 }
 
+// 상품명에 이 키워드가 포함되면 비정품(액세서리·호환품) 의심
+const SUSPICIOUS_TITLE_KEYWORDS = ["LED", "조명", "호환", "키트"];
+
+function isSuspiciousItem(item: {
+  brand: string | null;
+  category2: string | null;
+  title: string;
+}): boolean {
+  if (!item.brand || !item.category2) return true;
+  return SUSPICIOUS_TITLE_KEYWORDS.some((kw) =>
+    item.title.toLowerCase().includes(kw.toLowerCase()),
+  );
+}
+
 export function normalizeNaverShoppingItem(
   item: NaverShoppingApiItem,
   query: string,
@@ -35,10 +49,14 @@ export function normalizeNaverShoppingItem(
   const lprice = parsePrice(item.lprice);
   const shippingFeeOverride = null;
 
+  const brand = emptyToNull(item.brand);
+  const category2 = emptyToNull(item.category2);
+  const title = cleanText(item.title);
+
   return {
     query,
     productNumber,
-    title: cleanText(item.title),
+    title,
     link: item.link,
     image: item.image || null,
     mallName: cleanText(item.mallName || "네이버"),
@@ -47,13 +65,14 @@ export function normalizeNaverShoppingItem(
     productId: String(item.productId),
     productType: parsePrice(item.productType),
     maker: emptyToNull(item.maker),
-    brand: emptyToNull(item.brand),
+    brand,
     category1: emptyToNull(item.category1),
-    category2: emptyToNull(item.category2),
+    category2,
     category3: emptyToNull(item.category3),
     category4: emptyToNull(item.category4),
     shippingFeeOverride,
     effectivePrice: lprice,
+    suspicious: isSuspiciousItem({ brand, category2, title }),
     raw: item,
   };
 }

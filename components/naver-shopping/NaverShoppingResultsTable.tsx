@@ -140,7 +140,13 @@ export function NaverShoppingResultsTable({
               return (
                 <tr
                   key={`${item.query}-${item.productId}`}
-                  className={isLowest ? "bg-emerald-50/60" : "hover:bg-zinc-50"}
+                  className={
+                    item.suspicious
+                      ? "bg-amber-50/50 opacity-80 hover:opacity-100"
+                      : isLowest
+                        ? "bg-emerald-50/60"
+                        : "hover:bg-zinc-50"
+                  }
                 >
                   <td className="px-4 py-3">
                     <span className="font-medium text-zinc-900">{item.title}</span>
@@ -149,6 +155,11 @@ export function NaverShoppingResultsTable({
                       <span>ID {item.productId}</span>
                       {isLowest ? (
                         <span className="font-medium text-emerald-700">최저</span>
+                      ) : null}
+                      {item.suspicious ? (
+                        <span className="rounded bg-amber-100 px-1.5 py-0.5 font-medium text-amber-700">
+                          참고용(비정품 의심)
+                        </span>
                       ) : null}
                     </div>
                   </td>

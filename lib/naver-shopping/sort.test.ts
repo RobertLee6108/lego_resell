@@ -23,6 +23,7 @@ function item(overrides: Partial<NaverShoppingItem>): NaverShoppingItem {
     category4: null,
     shippingFeeOverride: null,
     effectivePrice: 0,
+    suspicious: false,
     raw: {} as NaverShoppingItem["raw"],
     ...overrides,
   };

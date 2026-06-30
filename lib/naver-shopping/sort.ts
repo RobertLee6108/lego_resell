@@ -35,7 +35,10 @@ export function lowestNaverShoppingItem(
   includeShipping: boolean,
 ): NaverShoppingItem | null {
   if (items.length === 0) return null;
-  return [...items].sort((a, b) => {
+  // 비정품 의심 항목은 최저가 후보에서 제외 (정품 후보가 없으면 전체 대상)
+  const genuine = items.filter((item) => !item.suspicious);
+  const pool = genuine.length > 0 ? genuine : items;
+  return [...pool].sort((a, b) => {
     const priceA = includeShipping ? withShippingPrice(a) : a.lprice;
     const priceB = includeShipping ? withShippingPrice(b) : b.lprice;
     return priceA - priceB;

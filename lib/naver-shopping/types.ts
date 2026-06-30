@@ -65,6 +65,7 @@ export interface NaverShoppingItem {
   category4: string | null;
   shippingFeeOverride: number | null;
   effectivePrice: number;
+  suspicious: boolean;
   raw: NaverShoppingApiItem;
 }
 

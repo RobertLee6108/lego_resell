@@ -1,11 +1,15 @@
 "use client";
 
-import { useMemo, useState } from "react";
+import { useMemo, useState, useTransition } from "react";
 import { formInputClass } from "@/components/ui/formStyles";
 import { InventoryProductPicker } from "@/components/margin/InventoryProductPicker";
 import { formatKrw } from "@/lib/format";
 import { recommendPriceByTargetProfit } from "@/lib/margin/calculateRecommendedPrice";
 import type { InventorySummary } from "@/lib/inventory/types";
+import {
+  actionFetchNaverMarketData,
+  type NaverMarketData,
+} from "@/app/margin/actions";
 
 const PLATFORM_PRESETS = [
   { label: "직접 판매", rate: 0 },
@@ -46,6 +50,10 @@ export function RecommendedPriceCalculator({
   const [platformFeeInput, setPlatformFeeInput] = useState("0");
   const [shippingInput, setShippingInput] = useState("0");
   const [editingUnitCost, setEditingUnitCost] = useState(false);
+
+  const [naverData, setNaverData] = useState<NaverMarketData | null>(null);
+  const [naverError, setNaverError] = useState<string | null>(null);
+  const [isPendingNaver, startNaverTransition] = useTransition();
 
   const stockProducts = inventoryRows.filter(
     (r) => r.avg_cost != null && r.avg_cost > 0,
@@ -108,6 +116,8 @@ export function RecommendedPriceCalculator({
 
   function handleProductPick(productNum: string, avgCost: number | null) {
     setProductNumber(productNum);
+    setNaverData(null);
+    setNaverError(null);
     if (productNum && avgCost != null) {
       setUnitCostInput(String(avgCost));
       setEditingUnitCost(false);
@@ -115,6 +125,18 @@ export function RecommendedPriceCalculator({
     } else {
       setEditingUnitCost(true);
     }
+  }
+
+  function fetchNaverData() {
+    setNaverError(null);
+    startNaverTransition(async () => {
+      const res = await actionFetchNaverMarketData(productNumber);
+      if (res.ok) {
+        setNaverData(res.data);
+      } else {
+        setNaverError(res.error);
+      }
+    });
   }
 
   function handleUnitCostChange(value: string) {
@@ -237,6 +259,56 @@ export function RecommendedPriceCalculator({
           </div>
         </div>
       </div>
+      {productNumber ? (
+        <div className="mt-4 border-t border-zinc-100 pt-4">
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={fetchNaverData}
+              disabled={isPendingNaver}
+              className="rounded-lg border border-zinc-300 bg-white px-3 py-1.5 text-xs font-medium text-zinc-700 transition hover:border-zinc-400 hover:bg-zinc-50 disabled:opacity-50"
+            >
+              {isPendingNaver ? "조회 중…" : "네이버 시세 조회"}
+            </button>
+            {naverData && !isPendingNaver ? (
+              <span className="text-xs text-zinc-400">
+                정품 {naverData.competitorCount}건 기준
+                {naverData.suspiciousCount > 0
+                  ? ` · 비정품 의심 ${naverData.suspiciousCount}건 제외`
+                  : ""}
+              </span>
+            ) : null}
+          </div>
+
+          {naverError && !isPendingNaver ? (
+            <p className="mt-2 text-xs text-red-600">{naverError}</p>
+          ) : null}
+
+          {naverData && !isPendingNaver ? (
+            <dl className="mt-3 grid grid-cols-3 gap-3">
+              <div className="rounded-lg border border-zinc-200 bg-white p-3">
+                <dt className="text-xs text-zinc-500">카탈로그 최저가</dt>
+                <dd className="mt-1 text-base font-semibold text-emerald-700">
+                  {formatKrw(naverData.catalogLowestPrice)}
+                </dd>
+              </div>
+              <div className="rounded-lg border border-zinc-200 bg-white p-3">
+                <dt className="text-xs text-zinc-500">경쟁셀러 수</dt>
+                <dd className="mt-1 text-base font-semibold text-zinc-800">
+                  {naverData.competitorCount}개
+                </dd>
+              </div>
+              <div className="rounded-lg border border-zinc-200 bg-white p-3">
+                <dt className="text-xs text-zinc-500">평균판매가</dt>
+                <dd className="mt-1 text-base font-semibold text-blue-700">
+                  {formatKrw(naverData.avgSellingPrice)}
+                </dd>
+              </div>
+            </dl>
+          ) : null}
+        </div>
+      ) : null}
+
       <div className="mt-5 rounded-lg bg-zinc-50 p-4">
         {!result ? (
           <p className="text-sm text-zinc-500">
