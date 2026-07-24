@@ -4,8 +4,10 @@ import {
   markNaverShoppingWatchTargetRun,
   saveBatchNaverShoppingRun,
 } from "@/lib/data/naver-shopping";
+import { recordPriceMonitoringLogAdmin } from "@/lib/data/price-monitoring";
 import { searchNaverShoppingMany } from "@/lib/naver-shopping/search";
 import type { NaverShoppingSort } from "@/lib/naver-shopping/types";
+import { summarizeMonitoringSnapshot } from "@/lib/repricing/monitoringSummary";
 
 export const dynamic = "force-dynamic";
 
@@ -56,6 +58,20 @@ export async function POST(request: NextRequest) {
         id: target.id,
         intervalMinutes: target.interval_minutes,
       });
+
+      if (target.product_number) {
+        const snapshot = summarizeMonitoringSnapshot(
+          results.flatMap((result) => result.items),
+          target.product_number,
+        );
+        await recordPriceMonitoringLogAdmin({
+          userId: target.user_id,
+          productNumber: target.product_number,
+          watchTargetId: target.id,
+          snapshot,
+          query: target.keyword,
+        });
+      }
 
       runs.push({ targetId: target.id, runId });
     } catch (error) {
