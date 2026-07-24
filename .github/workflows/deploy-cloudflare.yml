@@ -31,3 +31,19 @@ jobs:
           NAVER_SEARCH_CLIENT_SECRET: ${{ secrets.NAVER_SEARCH_CLIENT_SECRET }}
           BATCH_API_TOKEN: ${{ secrets.BATCH_API_TOKEN }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+
+      # npm run deploy only inlines NEXT_PUBLIC_* at build time. Server-only secrets
+      # must be pushed to the Worker itself so they exist at request runtime.
+      - name: Sync Worker runtime secrets
+        run: |
+          echo "$NAVER_SEARCH_CLIENT_ID" | npx wrangler secret put NAVER_SEARCH_CLIENT_ID
+          echo "$NAVER_SEARCH_CLIENT_SECRET" | npx wrangler secret put NAVER_SEARCH_CLIENT_SECRET
+          echo "$BATCH_API_TOKEN" | npx wrangler secret put BATCH_API_TOKEN
+          echo "$SUPABASE_SERVICE_ROLE_KEY" | npx wrangler secret put SUPABASE_SERVICE_ROLE_KEY
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          NAVER_SEARCH_CLIENT_ID: ${{ secrets.NAVER_SEARCH_CLIENT_ID }}
+          NAVER_SEARCH_CLIENT_SECRET: ${{ secrets.NAVER_SEARCH_CLIENT_SECRET }}
+          BATCH_API_TOKEN: ${{ secrets.BATCH_API_TOKEN }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
