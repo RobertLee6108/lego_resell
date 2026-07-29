@@ -38,9 +38,8 @@ export async function middleware(request: NextRequest) {
 
   const { pathname } = request.nextUrl;
   const isLoginPage = pathname === "/login";
-  const isPublicPath = pathname === "/naver-shopping";
 
-  if (!user && !isLoginPage && !isPublicPath) {
+  if (!user && !isLoginPage) {
     const url = request.nextUrl.clone();
     url.pathname = "/login";
     if (pathname !== "/") {
