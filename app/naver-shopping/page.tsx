@@ -3,7 +3,6 @@ import { PageSection } from "@/components/layout/PageSection";
 import { PageShell } from "@/components/layout/PageShell";
 import { NaverShoppingSearchForm } from "@/components/naver-shopping/NaverShoppingSearchForm";
 import { NaverShoppingWatchTargets } from "@/components/naver-shopping/NaverShoppingWatchTargets";
-import { getAuthUser } from "@/lib/auth/getUser";
 import {
   getNaverShoppingProducts,
   getNaverShoppingWatchTargets,
@@ -45,15 +44,12 @@ function RecentRuns({
 }
 
 export default async function NaverShoppingPage() {
-  const user = await getAuthUser();
   const products = await getNaverShoppingProducts();
 
-  const [targets, recentRuns] = user
-    ? await Promise.all([
-        getNaverShoppingWatchTargets(),
-        getRecentNaverShoppingRuns(),
-      ])
-    : [[], []];
+  const [targets, recentRuns] = await Promise.all([
+    getNaverShoppingWatchTargets(),
+    getRecentNaverShoppingRuns(),
+  ]);
 
   const savedKeywords = [
     ...targets.map((target) => target.keyword),
@@ -64,32 +60,24 @@ export default async function NaverShoppingPage() {
     <PageShell>
       <PageHeader
         title="네이버 상품 검색"
-        description={
-          user
-            ? "네이버 쇼핑 검색으로 레고 상품 최저가를 확인하고 검색 결과를 저장합니다."
-            : "네이버 쇼핑 검색으로 레고 상품 최저가를 확인합니다. 저장·배치 기능은 로그인 후 이용할 수 있습니다."
-        }
+        description="네이버 쇼핑 검색으로 레고 상품 최저가를 확인하고 검색 결과를 저장합니다."
       />
 
       <PageSection title="수동 검색">
         <NaverShoppingSearchForm
           products={products}
           savedKeywords={savedKeywords}
-          isLoggedIn={Boolean(user)}
+          isLoggedIn={true}
         />
       </PageSection>
 
-      {user ? (
-        <>
-          <PageSection title="관심 제품·키워드 배치">
-            <NaverShoppingWatchTargets products={products} targets={targets} />
-          </PageSection>
+      <PageSection title="관심 제품·키워드 배치">
+        <NaverShoppingWatchTargets products={products} targets={targets} />
+      </PageSection>
 
-          <PageSection title="최근 저장 검색">
-            <RecentRuns runs={recentRuns} />
-          </PageSection>
-        </>
-      ) : null}
+      <PageSection title="최근 저장 검색">
+        <RecentRuns runs={recentRuns} />
+      </PageSection>
     </PageShell>
   );
 }
