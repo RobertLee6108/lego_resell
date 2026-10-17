@@ -1,41 +1,39 @@
-import {
-  normalizeNaverShoppingResponse,
-} from "@/lib/naver-shopping/normalize";
+import { normalizeNaverShoppingItem } from "@/lib/naver-shopping/normalize";
 import type {
-  NaverShoppingApiResponse,
+  NaverShoppingApiItem,
+  NaverShoppingItem,
   NaverShoppingSearchInput,
   NaverShoppingSearchParams,
   NaverShoppingSearchResult,
 } from "@/lib/naver-shopping/types";
 
-const NAVER_SHOPPING_API_URL = "https://openapi.naver.com/v1/search/shop.json";
+const NAVER_SEARCH_URL = "https://search.naver.com/search.naver";
 
-const ERROR_MESSAGES: Record<string, string> = {
-  SE01: "검색 요청 형식이 올바르지 않습니다.",
-  SE02: "표시 개수는 1~100 사이여야 합니다.",
-  SE03: "검색 시작 위치가 올바르지 않습니다.",
-  SE04: "정렬 값이 올바르지 않습니다.",
-  SE05: "검색 API URL이 올바르지 않습니다.",
-  SE06: "검색어 인코딩 형식이 올바르지 않습니다.",
-  SE99: "네이버 검색 API 내부 오류입니다.",
-};
+const USER_AGENTS = [
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Macintosh; Intel Mac OS X 10_15_7) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/131.0.0.0 Safari/537.36",
+  "Mozilla/5.0 (Windows NT 10.0; Win64; x64; rv:132.0) Gecko/20100101 Firefox/132.0",
+];
 
-interface NaverErrorResponse {
-  errorCode?: string;
-  errorMessage?: string;
+function getRandomUserAgent(): string {
+  return USER_AGENTS[Math.floor(Math.random() * USER_AGENTS.length)];
 }
 
-function credentials() {
-  const clientId = process.env.NAVER_SEARCH_CLIENT_ID;
-  const clientSecret = process.env.NAVER_SEARCH_CLIENT_SECRET;
+function cleanHtmlText(text: string): string {
+  return text
+    .replace(/&lt;/g, "<")
+    .replace(/&gt;/g, ">")
+    .replace(/&quot;/g, '"')
+    .replace(/&#39;/g, "'")
+    .replace(/&amp;/g, "&")
+    .replace(/<\/?mark>/gi, "")
+    .replace(/<\/?b>/gi, "")
+    .trim();
+}
 
-  if (!clientId || !clientSecret) {
-    throw new Error(
-      "네이버 검색 API 키가 없습니다. NAVER_SEARCH_CLIENT_ID / NAVER_SEARCH_CLIENT_SECRET을 설정하세요.",
-    );
-  }
-
-  return { clientId, clientSecret };
+function randomDelay(minMs: number, maxMs: number): Promise<void> {
+  const ms = Math.floor(Math.random() * (maxMs - minMs + 1)) + minMs;
+  return new Promise((resolve) => setTimeout(resolve, ms));
 }
 
 export function buildNaverExclude(input: {
@@ -59,41 +57,177 @@ export function validateSearchInput(input: NaverShoppingSearchInput) {
   return { ...input, queries };
 }
 
+interface ParsedRawItem {
+  productId: string;
+  title: string;
+  lprice: number;
+  shippingFee: number;
+  mallName: string;
+  isOverseas: boolean;
+  image: string | null;
+  link: string;
+}
+
+function parseNaverSearchHtml(html: string): ParsedRawItem[] {
+  const items: ParsedRawItem[] = [];
+  const liRegex = /<li[^>]*data-slog-content="shp_dui:[^"]*"[^>]*>([\s\S]*?)<\/li>/gi;
+  let match: RegExpExecArray | null;
+
+  while ((match = liRegex.exec(html)) !== null) {
+    const block = match[1];
+
+    const midMatch = block.match(/nv_mid=([0-9]+)/);
+    const productId = midMatch ? midMatch[1] : "";
+
+    const titleMatch =
+      block.match(/<img[^>]*alt="([^"]*)"/i) ||
+      block.match(
+        /data-nlog-area="shp_dui\.a\.(?:itemtit|outtit)"[^>]*>[\s\S]*?<span>([\s\S]*?)<\/span>/i,
+      );
+    let title = "";
+    if (titleMatch) {
+      title = cleanHtmlText(titleMatch[1]);
+    }
+
+    const imgMatch = block.match(/<img[^>]*src="([^"]*)"/i);
+    const image = imgMatch ? imgMatch[1] : null;
+
+    const priceMatch = block.match(
+      /<span class="lfETsaia">([0-9,]+)<\/span><span class="TVuGseeW">원<\/span>/,
+    );
+    let lprice = 0;
+    if (priceMatch) {
+      lprice = parseInt(priceMatch[1].replace(/,/g, ""), 10);
+    }
+
+    let shippingFee = 0;
+    if (!block.includes("배송비</span>무료")) {
+      const shipMatch = block.match(/배송비<\/span>([0-9,]+)원/);
+      if (shipMatch) {
+        shippingFee = parseInt(shipMatch[1].replace(/,/g, ""), 10);
+      }
+    }
+
+    let mallName = "네이버";
+    const catalogMallMatch = block.match(/판매처<!-- -->\s*([0-9]+)/);
+    const mallMatch = block.match(
+      /data-nlog-area="shp_dui\.a\.outmall"[^>]*>([^<]+)<\/a>/,
+    );
+    if (catalogMallMatch) {
+      mallName = `네이버(가격비교 ${catalogMallMatch[1]}곳)`;
+    } else if (mallMatch) {
+      mallName = cleanHtmlText(mallMatch[1]);
+    }
+
+    const isOverseas = block.includes(">해외<");
+
+    const linkMatch = block.match(
+      /href="([^"]*(?:cr3\.shopping\.naver\.com|smartstore\.naver\.com)[^"]*)"/,
+    );
+    const link = linkMatch ? linkMatch[1].replace(/&amp;/g, "&") : "";
+
+    if (productId && title && lprice > 0) {
+      items.push({
+        productId,
+        title,
+        lprice,
+        shippingFee,
+        mallName,
+        isOverseas,
+        image,
+        link,
+      });
+    }
+  }
+
+  return items;
+}
+
 export async function fetchNaverShopping(
   params: NaverShoppingSearchParams,
 ): Promise<NaverShoppingSearchResult> {
-  const { clientId, clientSecret } = credentials();
-  const searchParams = new URLSearchParams({
-    query: params.query,
-    display: String(params.display),
-    start: String(params.start ?? 1),
-    sort: params.sort,
-  });
+  const url = new URL(NAVER_SEARCH_URL);
+  url.searchParams.set("where", "nexearch");
+  url.searchParams.set("query", params.query);
 
-  if (params.filter) searchParams.set("filter", params.filter);
-  if (params.exclude) searchParams.set("exclude", params.exclude);
-
-  const response = await fetch(`${NAVER_SHOPPING_API_URL}?${searchParams}`, {
+  const userAgent = getRandomUserAgent();
+  const response = await fetch(url.toString(), {
     headers: {
-      "X-Naver-Client-Id": clientId,
-      "X-Naver-Client-Secret": clientSecret,
+      "User-Agent": userAgent,
+      Accept:
+        "text/html,application/xhtml+xml,application/xml;q=0.9,image/avif,image/webp,*/*;q=0.8",
+      "Accept-Language": "ko-KR,ko;q=0.9,en-US;q=0.8,en;q=0.7",
+      "Sec-Ch-Ua":
+        '"Google Chrome";v="131", "Chromium";v="131", "Not_A Brand";v="24"',
+      "Sec-Ch-Ua-Mobile": "?0",
+      "Sec-Ch-Ua-Platform": '"Windows"',
+      "Cache-Control": "no-cache",
     },
     cache: "no-store",
   });
 
-  const json = await response.json();
-
   if (!response.ok) {
-    const error = json as NaverErrorResponse;
-    const mapped = error.errorCode ? ERROR_MESSAGES[error.errorCode] : null;
-    throw new Error(mapped ?? error.errorMessage ?? "네이버 쇼핑 검색에 실패했습니다.");
+    throw new Error(
+      `네이버 쇼핑 검색에 실패했습니다. (HTTP ${response.status})`,
+    );
   }
 
-  return normalizeNaverShoppingResponse(
-    json as NaverShoppingApiResponse,
-    params.query,
-    null,
-  );
+  const html = await response.text();
+  let parsedItems = parseNaverSearchHtml(html);
+
+  // 제외 필터 적용
+  if (params.exclude) {
+    if (params.exclude.includes("cbshop")) {
+      parsedItems = parsedItems.filter((item) => !item.isOverseas);
+    }
+    if (params.exclude.includes("used")) {
+      parsedItems = parsedItems.filter((item) => !item.title.includes("중고"));
+    }
+  }
+
+  // 정렬 옵션 적용
+  if (params.sort === "asc") {
+    parsedItems.sort((a, b) => a.lprice - b.lprice);
+  } else if (params.sort === "dsc") {
+    parsedItems.sort((a, b) => b.lprice - a.lprice);
+  }
+
+  // display 개수 제한
+  if (params.display && params.display > 0) {
+    parsedItems = parsedItems.slice(0, params.display);
+  }
+
+  // 기존 NaverShoppingItem 규격으로 변환
+  const items: NaverShoppingItem[] = parsedItems.map((item) => {
+    const raw: NaverShoppingApiItem = {
+      title: item.title,
+      link: item.link,
+      image: item.image ?? "",
+      lprice: String(item.lprice),
+      hprice: "0",
+      mallName: item.mallName,
+      productId: item.productId,
+      productType: "1",
+      maker: "레고",
+      brand: "레고",
+      category1: "출산/육아",
+      category2: "완구/매트",
+      category3: "블록놀이",
+      category4: "레고",
+    };
+
+    const normalized = normalizeNaverShoppingItem(raw, params.query, null);
+    normalized.shippingFeeOverride = item.shippingFee;
+    return normalized;
+  });
+
+  return {
+    query: params.query,
+    total: items.length,
+    start: params.start ?? 1,
+    display: items.length,
+    items,
+  };
 }
 
 export async function searchNaverShoppingMany(
@@ -102,22 +236,31 @@ export async function searchNaverShoppingMany(
   const parsed = validateSearchInput(input);
   const exclude = buildNaverExclude(parsed);
 
-  return Promise.all(
-    parsed.queries.map(async (query) => {
-      const result = await fetchNaverShopping({
-        query,
-        display: parsed.display,
-        sort: parsed.sort,
-        filter: parsed.filter,
-        exclude,
-      });
-      return {
-        ...result,
-        items: result.items.map((item) => ({
-          ...item,
-          productNumber: parsed.productNumber || null,
-        })),
-      };
-    }),
-  );
+  const results: NaverShoppingSearchResult[] = [];
+
+  for (let i = 0; i < parsed.queries.length; i++) {
+    const query = parsed.queries[i];
+    // 여러 쿼리 호출 시 봇 탐지 회피를 위한 무작위 지연(Jitter)
+    if (i > 0) {
+      await randomDelay(800, 1500);
+    }
+
+    const result = await fetchNaverShopping({
+      query,
+      display: parsed.display,
+      sort: parsed.sort,
+      filter: parsed.filter,
+      exclude,
+    });
+
+    results.push({
+      ...result,
+      items: result.items.map((item) => ({
+        ...item,
+        productNumber: parsed.productNumber || null,
+      })),
+    });
+  }
+
+  return results;
 }
