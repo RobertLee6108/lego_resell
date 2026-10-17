@@ -61,6 +61,7 @@ interface ParsedRawItem {
   productId: string;
   title: string;
   lprice: number;
+  hprice: number;
   shippingFee: number;
   mallName: string;
   isOverseas: boolean;
@@ -92,13 +93,54 @@ function parseNaverSearchHtml(html: string): ParsedRawItem[] {
     const imgMatch = block.match(/<img[^>]*src="([^"]*)"/i);
     const image = imgMatch ? imgMatch[1] : null;
 
-    const priceMatch = block.match(
-      /<span class="lfETsaia">([0-9,]+)<\/span><span class="TVuGseeW">원<\/span>/,
+    // 1. 할인 전 판매가 (정가)
+    const originalPriceMatch = block.match(
+      /<span class="blind">할인\s*전\s*판매가<\/span>\s*<span class="lfETsaia">([0-9,]+)<\/span>/i,
     );
+    const originalPrice = originalPriceMatch
+      ? parseInt(originalPriceMatch[1].replace(/,/g, ""), 10)
+    : 0;
+
+    // 2. 쿠폰 할인가 (있는 경우)
+    const couponPriceMatch =
+      block.match(
+        /<span class="KM7Z6vSV">\s*<span class="lfETsaia">([0-9,]+)<\/span>[\s\S]*?쿠폰할인가/i,
+      ) ||
+      block.match(
+        /<span class="lfETsaia">([0-9,]+)<\/span><span class="TVuGseeW">원<\/span><\/span>\s*<span class="[^"]*">쿠폰할인가/i,
+      );
+    const couponPrice = couponPriceMatch
+      ? parseInt(couponPriceMatch[1].replace(/,/g, ""), 10)
+      : 0;
+
+    // 3. 일반 할인가 (할인% 배지 뒤의 가격)
+    const discountPriceMatch = block.match(
+      /<span class="blind">할인<\/span><\/span>\s*<span class="lfETsaia">([0-9,]+)<\/span>/i,
+    );
+    const discountPrice = discountPriceMatch
+      ? parseInt(discountPriceMatch[1].replace(/,/g, ""), 10)
+      : 0;
+
+    // 4. block 내의 모든 lfETsaia 가격
+    const allPrices = [
+      ...block.matchAll(/<span class="lfETsaia">([0-9,]+)<\/span>/gi),
+    ].map((m) => parseInt(m[1].replace(/,/g, ""), 10));
+
+    // 최저가(실구매가): 쿠폰할인가 > 일반할인가 > (할인전 정가를 제외한 가격) > 첫 번째 가격
     let lprice = 0;
-    if (priceMatch) {
-      lprice = parseInt(priceMatch[1].replace(/,/g, ""), 10);
+    if (couponPrice > 0) {
+      lprice = couponPrice;
+    } else if (discountPrice > 0) {
+      lprice = discountPrice;
+    } else {
+      const validPrices =
+        originalPrice > 0
+          ? allPrices.filter((p) => p !== originalPrice)
+          : allPrices;
+      lprice = validPrices.length > 0 ? validPrices[0] : allPrices[0] || 0;
     }
+
+    const hprice = originalPrice > 0 ? originalPrice : 0;
 
     let shippingFee = 0;
     if (!block.includes("배송비</span>무료")) {
@@ -131,6 +173,7 @@ function parseNaverSearchHtml(html: string): ParsedRawItem[] {
         productId,
         title,
         lprice,
+        hprice,
         shippingFee,
         mallName,
         isOverseas,
@@ -204,7 +247,7 @@ export async function fetchNaverShopping(
       link: item.link,
       image: item.image ?? "",
       lprice: String(item.lprice),
-      hprice: "0",
+      hprice: String(item.hprice),
       mallName: item.mallName,
       productId: item.productId,
       productType: "1",
