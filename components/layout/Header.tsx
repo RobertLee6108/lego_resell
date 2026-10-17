@@ -1,4 +1,4 @@
-"use client";
+﻿"use client";
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
@@ -11,6 +11,7 @@ const NAV = [
   { href: "/sales", label: "판매" },
   { href: "/margin", label: "마진" },
   { href: "/naver-shopping", label: "네이버 검색" },
+  { href: "/box-studio", label: "박스 스튜디오" },
 ];
 
 interface HeaderProps {
@@ -69,3 +70,4 @@ export function Header({ userEmail }: HeaderProps) {
     </header>
   );
 }
+
